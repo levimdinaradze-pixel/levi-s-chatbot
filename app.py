@@ -5,22 +5,28 @@ import os
 
 app = Flask(__name__)
 
-# Load model
+# Load small transformer model
 embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Knowledge Base
+# Friendly, human-focused knowledge base
 kb = [
-    {"question": "What is artificial intelligence?", "answer": "Artificial intelligence is when machines or computers do tasks that normally require human intelligence."},
-    {"question": "How can I learn programming?", "answer": "Start with simple languages like Python, do small projects, learn by doing, and read tutorials."},
-    {"question": "What is Georgia country?", "answer": "Georgia is a country located at the intersection of Europe and Asia, in the Caucasus region."},
-    {"question": "What languages can you speak?", "answer": "I can understand many languages but currently I respond best in English."}
+    {"question": "Who are you?", "answer": "I'm Levi, your friendly chatbot assistant."},
+    {"question": "How are you?", "answer": "I'm just code, but I'm doing great — thanks for asking!"},
+    {"question": "What can you do?", "answer": "I can chat with you, answer simple questions, and keep you company."},
+    {"question": "Tell me a joke", "answer": "Why did the computer go to art school? Because it had a lot of bytes to express!"},
+    {"question": "What's your favorite color?", "answer": "I like electric blue. Very digital, very cool."},
+    {"question": "What day is it?", "answer": "Every day is Chatbot Day in my world!"},
+    {"question": "Do you watch movies?", "answer": "Not really, but I know about some popular ones."},
+    {"question": "Do you like music?", "answer": "If I could listen, I'd vibe to chill electronic beats."},
+    {"question": "Do you have a name?", "answer": "Yep! You can call me Levi."},
+    {"question": "Can we be friends?", "answer": "Of course! I'm always here when you want to talk."}
 ]
 
 # Precompute embeddings
 kb_questions = [item["question"] for item in kb]
 kb_embeddings = embed_model.encode(kb_questions, convert_to_tensor=True)
 
-# Match input to KB
+# Function to match input to knowledge base
 def get_kb_answer(user_text, threshold=0.6):
     user_emb = embed_model.encode(user_text, convert_to_tensor=True)
     cos_scores = torch.nn.functional.cosine_similarity(user_emb.unsqueeze(0), kb_embeddings)
@@ -31,7 +37,7 @@ def get_kb_answer(user_text, threshold=0.6):
     else:
         return None, float(best_score)
 
-# Flask route
+# POST endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -45,10 +51,11 @@ def chat():
         return jsonify({"answer": answer, "method": "retrieval", "score": score})
     else:
         return jsonify({
-            "answer": "I’m not sure about that. Can you ask something else or more clearly?",
+            "answer": "I'm not sure how to respond to that. Try asking me something simple!",
             "method": "fallback",
             "score": score
         })
 
+# Start the Flask app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
